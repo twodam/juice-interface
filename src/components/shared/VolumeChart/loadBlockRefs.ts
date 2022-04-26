@@ -23,6 +23,7 @@ export const loadBlockRefs = async ({
       duration,
       false,
     )
+    // @ts-expect-error
     .then((res: (BlockRef & { block: number })[]) => {
       const newBlockRefs: BlockRef[] = []
       const blocksCount = 40
