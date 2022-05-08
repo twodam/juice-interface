@@ -15,8 +15,10 @@ import ReactQueryProvider from 'providers/ReactQueryProvider'
 import store from './redux/store'
 import reportWebVitals from './utils/reportWebVitals'
 import initSentry from './lib/sentry'
+import initAmplitude from './lib/amplitude'
 
 initSentry()
+initAmplitude()
 
 ReactDOM.render(
   <React.StrictMode>
