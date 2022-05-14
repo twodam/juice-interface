@@ -14,6 +14,8 @@ import CurrencySymbol from 'components/shared/CurrencySymbol'
 import { V2CurrencyOption } from 'models/v2/currencyOption'
 import { V2CurrencyName } from 'utils/v2/currency'
 import { formatSplitPercent, SPLITS_TOTAL_PERCENT } from 'utils/v2/math'
+import useMobile from 'hooks/Mobile'
+import { Link } from 'react-router-dom'
 
 export default function SplitItem({
   split,
@@ -51,11 +53,29 @@ export default function SplitItem({
     )
   }
 
+  const isMobile = useMobile()
+
+  const itemFontSize = isMobile ? '0.9rem' : 'unset'
+
   const JuiceboxProjectBeneficiary = () => {
     return (
       <div>
         {/* TODO figure out project "handles" with ENS resolution */}
-        <div style={{ fontWeight: 500 }}>@{split.projectId}:</div>
+
+        <div style={{ fontWeight: 500 }}>
+          <Tooltip
+            title={<Trans>Juicebox V2 project with ID {split.projectId}</Trans>}
+          >
+            <Link
+              to={`/v2/p/${split.projectId}`}
+              target="_blank"
+              className="text-primary hover-text-action-primary hover-text-decoration-underline"
+            >
+              @{split.projectId}
+            </Link>
+          </Tooltip>
+          :
+        </div>
         <div
           style={{
             fontSize: '.8rem',
@@ -88,6 +108,7 @@ export default function SplitItem({
       <div
         style={{
           fontWeight: 500,
+          fontSize: itemFontSize,
           display: 'flex',
           alignItems: 'baseline',
         }}
@@ -115,7 +136,7 @@ export default function SplitItem({
     const splitValueFormatted = formatWad(splitValue, { ...valueFormatProps })
 
     return (
-      <>
+      <span style={{ fontSize: itemFontSize }}>
         (
         <CurrencySymbol
           currency={V2CurrencyName(
@@ -124,7 +145,7 @@ export default function SplitItem({
         />
         {splitValueFormatted}
         {valueSuffix ? <span> {valueSuffix}</span> : null})
-      </>
+      </span>
     )
   }
 

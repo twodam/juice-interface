@@ -1,4 +1,4 @@
-import { Button } from 'antd'
+import { Button, Tooltip } from 'antd'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { Provider, useDispatch } from 'react-redux'
 import store, { createStore } from 'redux/store'
@@ -12,6 +12,8 @@ import useProjectDistributionLimit from 'hooks/v2/contractReader/ProjectDistribu
 import useProjectSplits from 'hooks/v2/contractReader/ProjectSplits'
 import { editingV2ProjectActions } from 'redux/slices/editingV2Project'
 import { fromWad } from 'utils/formatNumber'
+
+import { t } from '@lingui/macro'
 
 import { ETH_PAYOUT_SPLIT_GROUP } from 'constants/v2/splits'
 import V2ProjectReconfigureModal from './index'
@@ -39,6 +41,11 @@ export default function V2ReconfigureFundingModalTrigger({
   function handleModalOpen() {
     localStoreRef.current = createStore()
     setReconfigureModalVisible(true)
+  }
+
+  function handleOk() {
+    setReconfigureModalVisible(false)
+    window.location.reload()
   }
 
   // Load queued FC data of project
@@ -108,18 +115,24 @@ export default function V2ReconfigureFundingModalTrigger({
       {triggerButton ? (
         triggerButton(handleModalOpen)
       ) : (
-        <Button
-          onClick={handleModalOpen}
-          icon={<SettingOutlined />}
-          type="text"
-        />
+        <Tooltip
+          title={t`Reconfigure project and funding details`}
+          placement="bottom"
+        >
+          <Button
+            onClick={handleModalOpen}
+            icon={<SettingOutlined />}
+            type="text"
+          />
+        </Tooltip>
       )}
       {/* Make button and drawer instance for funding drawer */}
       {localStoreRef.current && (
         <Provider store={localStoreRef.current}>
           <V2ProjectReconfigureModal
             visible={reconfigureModalVisible}
-            onOk={() => setReconfigureModalVisible(false)}
+            onOk={handleOk}
+            onCancel={() => setReconfigureModalVisible(false)}
             hideProjectDetails={hideProjectDetails}
           />
         </Provider>

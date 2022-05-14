@@ -13,11 +13,12 @@ import ProjectCard from 'components/shared/ProjectCard'
 
 import { Link, useHistory, useLocation } from 'react-router-dom'
 
-import { useInfiniteProjectsQuery, useProjectsSearch } from 'hooks/v1/Projects'
-import { V1TerminalVersion } from 'models/v1/terminals'
+import { useInfiniteProjectsQuery, useProjectsSearch } from 'hooks/Projects'
 
 import { NetworkContext } from 'contexts/networkContext'
 import { ThemeContext } from 'contexts/themeContext'
+
+import { CV } from 'models/cv'
 
 import { layouts } from 'constants/styles/layouts'
 import TrendingProjects from './TrendingProjects'
@@ -25,6 +26,7 @@ import ProjectsTabs from './ProjectsTabs'
 import HoldingsProjects from './HoldingsProjects'
 import ProjectsFilterAndSort from './ProjectsFilterAndSort'
 import ArchivedProjectsMessage from './ArchivedProjectsMessage'
+import MyProjects from './MyProjects'
 
 type OrderByOption = 'createdAt' | 'totalPaid'
 
@@ -54,8 +56,9 @@ export default function Projects() {
         case 'all':
           return 'all'
         case 'holdings':
-          // If no wallet connected, revert to default tab
-          return userAddress ? 'holdings' : defaultTab
+          return 'holdings'
+        case 'myprojects':
+          return 'myprojects'
         default:
           return defaultTab
       }
@@ -69,6 +72,7 @@ export default function Projects() {
   const [orderBy, setOrderBy] = useState<OrderByOption>('totalPaid')
   const [includeV1, setIncludeV1] = useState<boolean>(true)
   const [includeV1_1, setIncludeV1_1] = useState<boolean>(true)
+  const [includeV2, setIncludeV2] = useState<boolean>(true)
   const [showArchived, setShowArchived] = useState<boolean>(false)
 
   const loadMoreContainerRef = useRef<HTMLDivElement>(null)
@@ -77,10 +81,13 @@ export default function Projects() {
     theme: { colors },
   } = useContext(ThemeContext)
 
-  const terminalVersion: V1TerminalVersion | undefined = useMemo(() => {
-    if (includeV1 && !includeV1_1) return '1'
-    if (!includeV1 && includeV1_1) return '1.1'
-  }, [includeV1, includeV1_1])
+  const cv: CV[] | undefined = useMemo(() => {
+    const _cv: CV[] = []
+    if (includeV1) _cv.push('1')
+    if (includeV1_1) _cv.push('1.1')
+    if (includeV2) _cv.push('2')
+    return _cv.length ? _cv : ['1', '1.1', '2']
+  }, [includeV1, includeV1_1, includeV2])
 
   const {
     data: pages,
@@ -93,7 +100,7 @@ export default function Projects() {
     pageSize,
     orderDirection: 'desc',
     state: showArchived ? 'archived' : 'active',
-    terminalVersion,
+    cv,
   })
 
   const { data: searchPages, isLoading: isLoadingSearch } =
@@ -139,7 +146,7 @@ export default function Projects() {
           </h1>
 
           <Link to="/create">
-            <Button>
+            <Button type="primary" size="large">
               <Trans>Create project</Trans>
             </Button>
           </Link>
@@ -186,9 +193,11 @@ export default function Projects() {
           {selectedTab === 'all' && !searchText ? (
             <ProjectsFilterAndSort
               includeV1={includeV1}
-              setIncludeV1={setIncludeV1}
               includeV1_1={includeV1_1}
+              includeV2={includeV2}
+              setIncludeV1={setIncludeV1}
               setIncludeV1_1={setIncludeV1_1}
+              setIncludeV2={setIncludeV2}
               showArchived={showArchived}
               setShowArchived={setShowArchived}
               orderBy={orderBy}
@@ -200,6 +209,20 @@ export default function Projects() {
           hidden={!showArchived || selectedTab !== 'all'}
         />
       </div>
+
+      {!!searchText && (
+        <div
+          style={{
+            marginBottom: 20,
+            textAlign: 'center',
+            color: colors.text.secondary,
+          }}
+        >
+          <Trans>
+            <InfoCircleOutlined /> Search results don't include V2 projects yet.
+          </Trans>
+        </div>
+      )}
 
       {selectedTab === 'all' ? (
         <React.Fragment>
@@ -251,6 +274,10 @@ export default function Projects() {
       ) : selectedTab === 'holdings' ? (
         <div style={{ paddingBottom: 50 }}>
           <HoldingsProjects />
+        </div>
+      ) : selectedTab === 'myprojects' ? (
+        <div style={{ paddingBottom: 50 }}>
+          <MyProjects />
         </div>
       ) : selectedTab === 'trending' ? (
         <div style={{ paddingBottom: 50 }}>

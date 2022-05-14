@@ -5,7 +5,14 @@ import { useAppDispatch } from 'hooks/AppDispatch'
 import { useAppSelector } from 'hooks/AppSelector'
 import ReservedTokensFormItem from 'components/v2/V2Create/forms/TokenForm/ReservedTokensFormItem'
 
-import { CSSProperties, useCallback, useContext, useState } from 'react'
+import {
+  CSSProperties,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import {
   defaultFundingCycleData,
   defaultFundingCycleMetadata,
@@ -47,6 +54,8 @@ import FormItemWarningText from 'components/shared/FormItemWarningText'
 import { formattedNum } from 'utils/formatNumber'
 import { DEFAULT_BONDING_CURVE_RATE_PERCENTAGE } from 'components/shared/formItems/ProjectBondingCurveRate'
 
+import { DISCOUNT_RATE_EXPLANATION } from 'components/v2/V2Project/V2FundingCycleSection/settingExplanations'
+
 import { shadowCard } from 'constants/styles/shadowCard'
 import TabDescription from '../../TabDescription'
 
@@ -56,10 +65,12 @@ function DiscountRateExtra({
   hasDuration,
   initialIssuanceRate,
   discountRatePercent,
+  isCreate,
 }: {
   hasDuration?: boolean
   initialIssuanceRate: number
   discountRatePercent: number
+  isCreate?: boolean
 }) {
   const discountRateDecimal = discountRatePercent * 0.01
 
@@ -68,7 +79,7 @@ function DiscountRateExtra({
   const thirdIssuanceRate =
     secondIssuanceRate - secondIssuanceRate * discountRateDecimal
   return (
-    <div>
+    <div style={{ fontSize: '0.9rem' }}>
       {!hasDuration && (
         <FormItemWarningText>
           <Trans>
@@ -76,19 +87,13 @@ function DiscountRateExtra({
           </Trans>
         </FormItemWarningText>
       )}
-      <p>
-        <Trans>
-          The issuance rate will decrease by this percentage with each new
-          funding cycle. A higher discount rate will incentivize supporters to
-          pay your project earlier than later.
-        </Trans>
-      </p>
-      {discountRatePercent > 0 && (
+      <p>{DISCOUNT_RATE_EXPLANATION}</p>
+      {discountRatePercent > 0 && isCreate && (
         <>
           <TabDescription style={{ marginTop: 20 }}>
             The issuance rate of your second funding cycle will be{' '}
-            {formattedNum(secondIssuanceRate)} tokens / ETH, then{' '}
-            {formattedNum(thirdIssuanceRate)} tokens / ETH for your third
+            {formattedNum(secondIssuanceRate)} tokens / 1 ETH, then{' '}
+            {formattedNum(thirdIssuanceRate)} tokens / 1 ETH for your third
             funding cycle, and so on.
           </TabDescription>
         </>
@@ -97,7 +102,15 @@ function DiscountRateExtra({
   )
 }
 
-export default function TokenForm({ onFinish }: { onFinish: VoidFunction }) {
+export default function TokenForm({
+  onFormUpdated,
+  onFinish,
+  isCreate,
+}: {
+  onFormUpdated?: (updated: boolean) => void
+  onFinish: VoidFunction
+  isCreate?: boolean // If the instance of this form is in the create flow (not reconfig)
+}) {
   const {
     theme,
     theme: { colors },
@@ -118,6 +131,28 @@ export default function TokenForm({ onFinish }: { onFinish: VoidFunction }) {
   const canSetRedemptionRate = hasDistributionLimit(fundAccessConstraint)
   const canSetDiscountRate = hasFundingDuration(fundingCycleData)
 
+  // Form initial values set by default
+  const initialValues = useMemo(
+    () => ({
+      reservedRate:
+        fundingCycleMetadata.reservedRate ??
+        defaultFundingCycleMetadata.reservedRate,
+      discountRate:
+        (canSetDiscountRate && fundingCycleData?.discountRate) ||
+        defaultFundingCycleData.discountRate,
+      redemptionRate:
+        (canSetRedemptionRate && fundingCycleMetadata?.redemptionRate) ||
+        defaultFundingCycleMetadata.redemptionRate,
+    }),
+    [
+      fundingCycleMetadata.reservedRate,
+      fundingCycleMetadata?.redemptionRate,
+      canSetDiscountRate,
+      fundingCycleData?.discountRate,
+      canSetRedemptionRate,
+    ],
+  )
+
   /**
    * NOTE: these values will all be in their 'native' units,
    * e.g. permyriads, parts-per-billion etc.
@@ -126,16 +161,13 @@ export default function TokenForm({ onFinish }: { onFinish: VoidFunction }) {
    * props later on.
    */
   const [reservedRate, setReservedRate] = useState<string>(
-    fundingCycleMetadata?.reservedRate ??
-      defaultFundingCycleMetadata.reservedRate,
+    initialValues.reservedRate,
   )
   const [discountRate, setDiscountRate] = useState<string>(
-    (canSetDiscountRate && fundingCycleData?.discountRate) ||
-      defaultFundingCycleData.discountRate,
+    initialValues.discountRate,
   )
   const [redemptionRate, setRedemptionRate] = useState<string>(
-    (canSetRedemptionRate && fundingCycleMetadata?.redemptionRate) ||
-      defaultFundingCycleMetadata.redemptionRate,
+    initialValues.redemptionRate,
   )
 
   const [discountRateChecked, setDiscountRateChecked] = useState<boolean>(
@@ -177,6 +209,14 @@ export default function TokenForm({ onFinish }: { onFinish: VoidFunction }) {
     redemptionRate,
   ])
 
+  useEffect(() => {
+    const hasFormUpdated =
+      initialValues.reservedRate !== reservedRate ||
+      initialValues.discountRate !== discountRate ||
+      initialValues.redemptionRate !== redemptionRate
+    onFormUpdated?.(hasFormUpdated)
+  })
+
   const defaultValueStyle: CSSProperties = {
     color: colors.text.tertiary,
     marginLeft: 15,
@@ -197,14 +237,16 @@ export default function TokenForm({ onFinish }: { onFinish: VoidFunction }) {
   return (
     <Form layout="vertical" onFinish={onTokenFormSaved}>
       <Space size="middle" direction="vertical">
-        <TabDescription>
-          <Trans>
-            By default, the issuance rate for your project's token is 1,000,000
-            tokens / 1 ETH. For example, a 1 ETH contribution to your project
-            will return 1,000,000 tokens. You can manipulate the issuance rate
-            with the following configurations.
-          </Trans>
-        </TabDescription>
+        {isCreate && (
+          <TabDescription>
+            <Trans>
+              By default, the issuance rate for your project's token during
+              funding cycle #1 is 1,000,000 tokens / 1 ETH. For example, a 1 ETH
+              contribution to your project will return 1,000,000 tokens. You can
+              manipulate the issuance rate with the following configurations.
+            </Trans>
+          </TabDescription>
+        )}
 
         <div>
           <ReservedTokensFormItem
@@ -219,6 +261,7 @@ export default function TokenForm({ onFinish }: { onFinish: VoidFunction }) {
             style={{ ...shadowCard(theme), padding: 25, marginBottom: 10 }}
             reservedTokensSplits={reservedTokensSplits}
             onReservedTokensSplitsChange={setReservedTokensSplits}
+            isCreate={isCreate}
           />
 
           <Form.Item
@@ -227,6 +270,7 @@ export default function TokenForm({ onFinish }: { onFinish: VoidFunction }) {
                 hasDuration={canSetDiscountRate}
                 initialIssuanceRate={initialIssuanceRate}
                 discountRatePercent={discountRatePercent}
+                isCreate={isCreate}
               />
             }
             label={

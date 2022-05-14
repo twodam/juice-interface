@@ -3,9 +3,7 @@ import {
   V2ProjectContextType,
 } from 'contexts/v2/projectContext'
 import { useProjectMetadata } from 'hooks/ProjectMetadata'
-import { useParams } from 'react-router-dom'
 import Loading from 'components/shared/Loading'
-import { BigNumber } from '@ethersproject/bignumber'
 import useProjectMetadataContent from 'hooks/v2/contractReader/ProjectMetadataContent'
 import ScrollToTopButton from 'components/shared/ScrollToTopButton'
 import useProjectCurrentFundingCycle from 'hooks/v2/contractReader/ProjectCurrentFundingCycle'
@@ -17,9 +15,7 @@ import useProjectDistributionLimit from 'hooks/v2/contractReader/ProjectDistribu
 import { useMemo } from 'react'
 import { useCurrencyConverter } from 'hooks/v1/CurrencyConverter'
 import { V2CurrencyOption } from 'models/v2/currencyOption'
-import { V2CurrencyName, V2_CURRENCY_ETH } from 'utils/v2/currency'
-
-import { decodeV2FundingCycleMetadata } from 'utils/v2/fundingCycle'
+import { NO_CURRENCY, V2CurrencyName, V2_CURRENCY_ETH } from 'utils/v2/currency'
 
 import useSymbolOfERC20 from 'hooks/v1/contractReader/SymbolOfERC20' // this is version-agnostic, we chillin
 
@@ -30,28 +26,20 @@ import useTerminalCurrentOverflow from 'hooks/v2/contractReader/TerminalCurrentO
 import { useBallotState } from 'hooks/v2/contractReader/BallotState'
 import useProjectTokenTotalSupply from 'hooks/v2/contractReader/ProjectTokenTotalSupply'
 
+import NewDeployNotAvailable from 'components/shared/NewDeployNotAvailable'
+
+import { useLocation } from 'react-router-dom'
+
 import { layouts } from 'constants/styles/layouts'
 
 import V2Project from '../V2Project'
-import Dashboard404 from './Dashboard404'
+import Project404 from '../../shared/Project404'
 import {
   ETH_PAYOUT_SPLIT_GROUP,
   RESERVED_TOKEN_SPLIT_GROUP,
 } from 'constants/v2/splits'
 
-const parseProjectIdParameter = (projectIdParameter?: string) => {
-  try {
-    return BigNumber.from(projectIdParameter)
-  } catch (e) {
-    return undefined
-  }
-}
-
-export default function V2Dashboard() {
-  const { projectId: projectIdParameter }: { projectId?: string } = useParams()
-
-  const projectId = parseProjectIdParameter(projectIdParameter)
-
+export default function V2Dashboard({ projectId }: { projectId: number }) {
   const { data: metadataCID, loading: metadataURILoading } =
     useProjectMetadataContent(projectId)
 
@@ -61,15 +49,11 @@ export default function V2Dashboard() {
     isLoading: metadataLoading,
   } = useProjectMetadata(metadataCID)
 
-  // Calls JBFundingCycleStore.currentOf
-  const { data: fundingCycle, loading: fundingCycleLoading } =
+  const { data: fundingCycleResponse, loading: fundingCycleLoading } =
     useProjectCurrentFundingCycle({
       projectId,
     })
-
-  const fundingCycleMetadata = fundingCycle
-    ? decodeV2FundingCycleMetadata(fundingCycle?.metadata)
-    : undefined
+  const [fundingCycle, fundingCycleMetadata] = fundingCycleResponse ?? []
 
   const { data: payoutSplits } = useProjectSplits({
     projectId,
@@ -81,6 +65,10 @@ export default function V2Dashboard() {
     projectId,
   })
 
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
+  const isNewDeploy = Boolean(params.get('newDeploy'))
+
   const primaryTerminal = terminals?.[0] // TODO: make primaryTerminalOf hook and use it
 
   const { data: distributionLimitData, loading: distributionLimitLoading } =
@@ -90,11 +78,12 @@ export default function V2Dashboard() {
       terminal: primaryTerminal,
     })
 
-  const { data: usedDistributionLimit } = useUsedDistributionLimit({
-    projectId,
-    terminal: primaryTerminal,
-    fundingCycleNumber: fundingCycle?.number,
-  })
+  const { data: usedDistributionLimit, loading: usedDistributionLimitLoading } =
+    useUsedDistributionLimit({
+      projectId,
+      terminal: primaryTerminal,
+      fundingCycleNumber: fundingCycle?.number,
+    })
 
   const [distributionLimit, distributionLimitCurrency] =
     distributionLimitData ?? []
@@ -129,6 +118,14 @@ export default function V2Dashboard() {
   } = useMemo(() => {
     if (ETHBalanceLoading) return { loading: true }
 
+    // if ETH, no conversion necessary
+    if (
+      distributionLimitCurrency?.eq(V2_CURRENCY_ETH) ||
+      distributionLimitCurrency?.eq(NO_CURRENCY)
+    ) {
+      return { data: ETHBalance, loading: false }
+    }
+
     return {
       data: converter.wadToCurrency(
         ETHBalance,
@@ -148,12 +145,15 @@ export default function V2Dashboard() {
   const { data: ballotState } = useBallotState(projectId)
 
   if (metadataLoading || metadataURILoading) return <Loading />
-
-  if (projectId?.eq(0) || metadataError || !metadataCID) {
-    return <Dashboard404 projectId={projectId} />
+  if (isNewDeploy && !metadataCID) {
+    return <NewDeployNotAvailable handleOrId={projectId} />
+  }
+  if (metadataError || !metadataCID) {
+    return <Project404 projectId={projectId} />
   }
 
   const project: V2ProjectContextType = {
+    cv: '2',
     projectId,
     projectMetadata,
     fundingCycle,
@@ -179,6 +179,7 @@ export default function V2Dashboard() {
       balanceInDistributionLimitCurrencyLoading,
       distributionLimitLoading,
       fundingCycleLoading,
+      usedDistributionLimitLoading,
     },
   }
 

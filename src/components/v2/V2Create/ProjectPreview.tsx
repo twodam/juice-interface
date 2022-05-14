@@ -48,8 +48,9 @@ export default function ProjectPreview({
 
   const project: V2ProjectContextType = {
     isPreviewMode: true,
+    cv: '2',
 
-    projectId: BigNumber.from(0),
+    projectId: 0,
     projectMetadata,
 
     fundingCycle,
@@ -82,6 +83,7 @@ export default function ProjectPreview({
       balanceInDistributionLimitCurrencyLoading: false,
       distributionLimitLoading: false,
       fundingCycleLoading: false,
+      usedDistributionLimitLoading: false,
     },
   }
 

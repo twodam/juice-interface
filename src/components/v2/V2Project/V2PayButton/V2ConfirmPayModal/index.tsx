@@ -9,7 +9,7 @@ import { NetworkContext } from 'contexts/networkContext'
 import { useCurrencyConverter } from 'hooks/v1/CurrencyConverter'
 import { V2ProjectContext } from 'contexts/v2/projectContext'
 
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { formattedNum, formatWad } from 'utils/formatNumber'
 
 import { tokenSymbolText } from 'utils/tokenSymbolText'
@@ -25,7 +25,6 @@ import { FormItems } from 'components/shared/formItems'
 import * as constants from '@ethersproject/constants'
 
 import {
-  decodeV2FundingCycleMetadata,
   getUnsafeV2FundingCycleProperties,
   V2FundingCycleRiskCount,
 } from 'utils/v2/fundingCycle'
@@ -51,6 +50,7 @@ export default function V2ConfirmPayModal({
   const { userAddress, onSelectWallet } = useContext(NetworkContext)
   const {
     fundingCycle,
+    fundingCycleMetadata,
     projectMetadata,
     projectId,
     tokenAddress,
@@ -70,13 +70,14 @@ export default function V2ConfirmPayModal({
 
   const [form] = useForm<{ memo: string; beneficiary: string }>()
 
+  useEffect(() => {
+    setBeneficiary(userAddress)
+  }, [userAddress])
+
   const usdAmount = converter.weiToUsd(weiAmount)
 
   if (!fundingCycle || !projectId || !projectMetadata) return null
 
-  const fundingCycleMetadata = decodeV2FundingCycleMetadata(
-    fundingCycle.metadata,
-  )
   const reservedRate = fundingCycleMetadata?.reservedRate?.toNumber()
 
   const receivedTickets = weightedAmount(
@@ -158,11 +159,10 @@ export default function V2ConfirmPayModal({
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <p>
           <Trans>
-            Paying{' '}
-            <span style={{ fontWeight: 'bold' }}>{projectMetadata.name}</span>{' '}
-            is not an investment — it's a way to support the project. Any value
-            or utility of the tokens you receive is determined by{' '}
-            {projectMetadata.name}.
+            Paying <strong>{projectMetadata.name}</strong> is not an investment
+            — it's a way to support the project. Any value or utility of the
+            tokens you receive is determined by{' '}
+            <strong>{projectMetadata.name}</strong>.
           </Trans>
         </p>
 
@@ -175,11 +175,11 @@ export default function V2ConfirmPayModal({
           </div>
         )}
 
-        {riskCount && fundingCycle && (
+        {riskCount && fundingCycle ? (
           <ProjectRiskNotice
             unsafeProperties={getUnsafeV2FundingCycleProperties(fundingCycle)}
           />
-        )}
+        ) : null}
 
         <Descriptions column={1} bordered>
           <Descriptions.Item label={t`Pay amount`} className="content-right">

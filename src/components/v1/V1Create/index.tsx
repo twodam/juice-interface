@@ -316,9 +316,7 @@ export default function V1Create() {
           dispatch(editingProjectActions.resetState())
 
           window.location.hash =
-            '/p/' +
-            editingProjectInfo.handle +
-            '?newDeploy=true&feedbackModalOpen=true'
+            '/p/' + editingProjectInfo.handle + '?newDeploy=true'
         },
       },
     )
@@ -497,7 +495,8 @@ export default function V1Create() {
       currentTicketMods: editingTicketMods,
       metadata: editingProjectInfo.metadata,
       handle: editingProjectInfo.handle,
-      projectId: BigNumber.from(0),
+      projectId: 0,
+      cv: '1.1',
       queuedFC: undefined,
       queuedPayoutMods: undefined,
       queuedTicketMods: undefined,

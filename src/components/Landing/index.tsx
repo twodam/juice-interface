@@ -1,30 +1,23 @@
 import { t, Trans } from '@lingui/macro'
 import { Button, Col, Row, Space } from 'antd'
-import V1Create from 'components/v1/V1Create'
-import Loading from 'components/shared/Loading'
+import ExternalLink from 'components/shared/ExternalLink'
 import FeedbackFormButton from 'components/shared/FeedbackFormButton'
-
-import { ThemeContext } from 'contexts/themeContext'
-import { useProjectsQuery } from 'hooks/v1/Projects'
-import { CSSProperties, useContext } from 'react'
-
 import Grid from 'components/shared/Grid'
-
+import Loading from 'components/shared/Loading'
 import ProjectCard from 'components/shared/ProjectCard'
 
-import { Link, useHistory } from 'react-router-dom'
-
-import ExternalLink from 'components/shared/ExternalLink'
-
-import { FEATURE_FLAGS, featureFlagEnabled } from 'utils/featureFlags'
+import { ThemeContext } from 'contexts/themeContext'
+import { useProjectsQuery } from 'hooks/Projects'
+import { CSSProperties, useContext } from 'react'
+import { Link } from 'react-router-dom'
 
 import { ThemeOption } from 'constants/theme/theme-option'
 
 import Faq from './Faq'
 import Footer from './Footer'
 import Payments from './Payments'
-import TrendingSection from './TrendingSection'
 import { OverflowVideoLink } from './QAs'
+import TrendingSection from './TrendingSection'
 
 const BigHeader = ({ text }: { text: string }) => (
   <h1
@@ -53,15 +46,8 @@ const FourthCol = ({
   </div>
 )
 
-function scrollToCreate() {
-  document.getElementById('create')?.scrollIntoView({ behavior: 'smooth' })
-}
-
-const v2Enabled = featureFlagEnabled(FEATURE_FLAGS.ENABLE_V2)
-
 export default function Landing() {
   const { theme, forThemeOption } = useContext(ThemeContext)
-  const history = useHistory()
   const colors = theme.colors
   const totalMaxWidth = 1080
 
@@ -80,6 +66,13 @@ export default function Landing() {
     maxWidth: totalMaxWidth,
     margin: '0 auto',
   }
+
+  // const { data: protocolLogs } = useSubgraphQuery({
+  //   entity: 'protocolLog',
+  //   keys: ['erc20Count', 'paymentsCount', 'projectsCount', 'volumePaid'],
+  // })
+
+  // const stats = protocolLogs?.[0]
 
   return (
     <div>
@@ -168,25 +161,16 @@ export default function Landing() {
 
                 <div className="hide-mobile">
                   <div style={{ display: 'inline-block' }}>
-                    {v2Enabled ? (
-                      <Button
-                        type="primary"
-                        size="large"
-                        onClick={() => {
-                          history.push('/v2/create')
-                        }}
-                      >
+                    <Link
+                      to={'/create'}
+                      onClick={() => {
+                        window.fathom?.trackGoal('IIYVJKNC', 0)
+                      }}
+                    >
+                      <Button type="primary" size="large">
                         <Trans>Design your project</Trans>
                       </Button>
-                    ) : (
-                      <Button
-                        type="primary"
-                        size="large"
-                        onClick={scrollToCreate}
-                      >
-                        <Trans>Design your project</Trans>
-                      </Button>
-                    )}
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -213,6 +197,30 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* <section
+        style={{
+          ...section,
+          marginTop: 80,
+          paddingTop: 20,
+          paddingBottom: 60,
+        }}
+      >
+        <div
+          style={{
+            ...wrapper,
+          }}
+        >
+          <SmallHeader text={t`Protocol stats`} />
+          <div>{stats?.projectsCount} projects</div>
+          <div>{stats?.paymentsCount} payments</div>
+          <div>
+            <CurrencySymbol currency={'ETH'} />
+            {formatWad(stats?.volumePaid, { precision: 0 })} volume
+          </div>
+          <div>{stats?.erc20Count} ERC20s deployed</div>
+        </div>
+      </section> */}
+
       <TrendingSection />
 
       <section
@@ -235,7 +243,7 @@ export default function Landing() {
                 {previewProjects ? (
                   <Grid list>
                     {previewProjects.map(p => (
-                      <ProjectCard key={p.uri} project={p} />
+                      <ProjectCard key={p.metadataUri} project={p} />
                     ))}
                   </Grid>
                 ) : (
@@ -340,20 +348,6 @@ export default function Landing() {
           </Row>
         </div>
       </section>
-
-      {window.innerWidth > 600 && !v2Enabled && (
-        <section
-          id="create"
-          style={{
-            ...section,
-            marginTop: 0,
-            paddingTop: 20,
-            paddingBottom: 40,
-          }}
-        >
-          <V1Create />
-        </section>
-      )}
 
       <section
         style={{

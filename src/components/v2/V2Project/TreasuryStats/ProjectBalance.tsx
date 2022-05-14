@@ -24,7 +24,7 @@ export default function ProjectBalance({ style }: { style?: CSSProperties }) {
   return (
     <StatLine
       loading={balanceInDistributionLimitCurrencyLoading}
-      statLabel={<Trans>In Juicebox</Trans>}
+      statLabel={<Trans>In treasury</Trans>}
       statLabelTip={
         <Trans>The balance of this project in the Juicebox contract.</Trans>
       }
@@ -36,12 +36,10 @@ export default function ProjectBalance({ style }: { style?: CSSProperties }) {
             marginLeft: 10,
           }}
         >
-          {distributionLimitCurrency?.eq(V2_CURRENCY_USD) ? (
+          {distributionLimitCurrency?.eq(V2_CURRENCY_USD) && (
             <span style={textSecondary(theme)}>
               <ETHAmount amount={ETHBalance} precision={4} padEnd={true} />{' '}
             </span>
-          ) : (
-            ''
           )}
           <V2CurrencyAmount
             amount={balanceInDistributionLimitCurrency ?? BigNumber.from(0)}

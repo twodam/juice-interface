@@ -28,7 +28,7 @@ import { amountSubFee } from 'utils/math'
 import { V1CurrencyName } from 'utils/v1/currency'
 
 import { V1_CURRENCY_ETH } from 'constants/v1/currency'
-import ProjectPayoutMods from '../shared/formItems/ProjectPayoutMods'
+import ProjectPayoutMods from './ProjectPayoutMods'
 
 export default function PayoutModsList({
   mods,
@@ -41,7 +41,7 @@ export default function PayoutModsList({
   fundingCycle:
     | Pick<V1FundingCycle, 'target' | 'currency' | 'configured' | 'fee'>
     | undefined
-  projectId: BigNumber | undefined
+  projectId: number | undefined
   feePerbicent: BigNumber | undefined
   total?: BigNumber
 }) {
@@ -164,7 +164,7 @@ export default function PayoutModsList({
         />
       )}
 
-      {fundingCycle && projectId?.gt(0) && hasEditPermission ? (
+      {fundingCycle && projectId && hasEditPermission ? (
         <div style={{ marginTop: 10 }}>
           <Button size="small" onClick={() => setModalVisible(true)}>
             Edit payouts

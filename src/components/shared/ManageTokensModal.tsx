@@ -4,6 +4,7 @@ import ExternalLink from 'components/shared/ExternalLink'
 import RichButton from 'components/shared/RichButton'
 import { PropsWithChildren, useState } from 'react'
 import { tokenSymbolText } from 'utils/tokenSymbolText'
+import * as constants from '@ethersproject/constants'
 
 const BURN_DEFINITION_LINK =
   'https://www.investopedia.com/tech/cryptocurrency-burning-can-it-manage-inflation/'
@@ -43,8 +44,8 @@ export const RedeemButtonTooltip = ({
 
 type ModalProps = {
   visible?: boolean
-  onOk?: VoidFunction
   onCancel?: VoidFunction
+  onConfirmed?: VoidFunction
 }
 
 export default function ManageTokensModal({
@@ -54,6 +55,7 @@ export default function ManageTokensModal({
   userHasMintPermission,
   hasOverflow,
   tokenSymbol,
+  tokenAddress,
   RedeemModal,
   ClaimTokensModal,
   MintModal,
@@ -64,6 +66,7 @@ export default function ManageTokensModal({
   visible?: boolean
   hasOverflow: boolean | undefined
   tokenSymbol: string | undefined
+  tokenAddress: string | undefined
 
   RedeemModal: (props: ModalProps) => JSX.Element | null
   ClaimTokensModal: (props: ModalProps) => JSX.Element | null
@@ -80,6 +83,7 @@ export default function ManageTokensModal({
   })
 
   const redeemDisabled = !Boolean(hasOverflow)
+  const hasIssuedTokens = tokenAddress && tokenAddress !== constants.AddressZero
 
   return (
     <>
@@ -125,16 +129,18 @@ export default function ManageTokensModal({
             </Tooltip>
           )}
 
-          <RichButton
-            heading={<Trans>Claim {tokensLabel} as ERC-20</Trans>}
-            description={
-              <Trans>
-                Move your {tokensLabel} from the Juicebox contract to your
-                wallet.
-              </Trans>
-            }
-            onClick={() => setUnstakeModalVisible(true)}
-          />
+          {hasIssuedTokens && (
+            <RichButton
+              heading={<Trans>Claim {tokensLabel} as ERC-20</Trans>}
+              description={
+                <Trans>
+                  Move your {tokensLabel} from the Juicebox contract to your
+                  wallet.
+                </Trans>
+              }
+              onClick={() => setUnstakeModalVisible(true)}
+            />
+          )}
 
           {userHasMintPermission && projectAllowsMint && (
             <Tooltip
@@ -166,20 +172,18 @@ export default function ManageTokensModal({
 
       <RedeemModal
         visible={redeemModalVisible}
-        onOk={() => {
-          setRedeemModalVisible(false)
-        }}
-        onCancel={() => {
-          setRedeemModalVisible(false)
-        }}
+        onCancel={() => setRedeemModalVisible(false)}
+        onConfirmed={() => window.location.reload()}
       />
       <ClaimTokensModal
         visible={unstakeModalVisible}
         onCancel={() => setUnstakeModalVisible(false)}
+        onConfirmed={() => window.location.reload()}
       />
       <MintModal
         visible={mintModalVisible}
         onCancel={() => setMintModalVisible(false)}
+        onConfirmed={() => window.location.reload()}
       />
     </>
   )

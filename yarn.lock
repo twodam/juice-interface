@@ -3108,10 +3108,10 @@
     hardhat-deploy-ethers "^0.3.0-beta.10"
     prettier "^2.4.0"
 
-"@jbx-protocol/contracts-v2@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@jbx-protocol/contracts-v2/-/contracts-v2-1.0.0.tgz#e508825d5a71a06907b3d753e1a9f4674ab8e3ac"
-  integrity sha512-ArHI08JuAhB1JSESGWu71AZjiffMmuyAAZAqjeMrBj/n/pb4nzmronH56iQybLfpNBuoQQ030NY1pkYL15zw/g==
+"@jbx-protocol/contracts-v2@4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@jbx-protocol/contracts-v2/-/contracts-v2-4.0.0.tgz#0e1758c3be932993c7dbfa6b23addd10cc1855ea"
+  integrity sha512-8B3UBPZYS4HCvRY25M8ROZi7mQdDrUMfq7dT3ucPVlE1KQLC8nBMwV2PiihgUamKpbQES9vhs7T4UIZbAv79rg==
   dependencies:
     "@chainlink/contracts" "^0.1.6"
     "@nomiclabs/hardhat-etherscan" "^2.1.4"

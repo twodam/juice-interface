@@ -38,6 +38,7 @@ export default function V1Project({
     isArchived,
     tokenSymbol,
     tokenAddress,
+    isPreviewMode,
   } = useContext(V1ProjectContext)
 
   const fcMetadata = decodeFundingCycleMetadata(currentFC?.metadata)
@@ -45,7 +46,7 @@ export default function V1Project({
 
   const gutter = 40
 
-  if (!projectId || !fcMetadata) return null
+  if (projectId === undefined || !fcMetadata) return null
 
   return (
     <div style={style}>
@@ -75,7 +76,7 @@ export default function V1Project({
 
       <Row gutter={gutter} style={{ paddingBottom: gutter }}>
         <Col xs={24} md={column ? 24 : 12} style={{ marginTop: gutter }}>
-          {projectId.gt(0) && (
+          {projectId && (
             <div style={{ marginBottom: gutter }}>
               <Suspense fallback={<LoadingOutlined />}>
                 <BalanceTimeline height={240} />
@@ -89,10 +90,11 @@ export default function V1Project({
 
           <FundingCycles showCurrentDetail={showCurrentDetail} />
         </Col>
-
-        <Col xs={24} md={column ? 24 : 12} style={{ marginTop: gutter }}>
-          <ProjectActivity />
-        </Col>
+        {!isPreviewMode ? (
+          <Col xs={24} md={column ? 24 : 12} style={{ marginTop: gutter }}>
+            <ProjectActivity />
+          </Col>
+        ) : null}
       </Row>
     </div>
   )
