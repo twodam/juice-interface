@@ -1659,8 +1659,11 @@ msgstr ""
 msgid "Paid"
 msgstr ""
 
-#: src/components/v1/V1Project/V1PayButton.tsx
 #: src/components/v2/V2Project/V2PayButton/index.tsx
+msgid "Paid aas <0/>"
+msgstr ""
+
+#: src/components/v1/V1Project/V1PayButton.tsx
 msgid "Paid as <0/>"
 msgstr "Pagado como <0/>"
 
