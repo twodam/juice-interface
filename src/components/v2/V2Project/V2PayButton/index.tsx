@@ -67,7 +67,7 @@ export default function V2PayButton({
       {payInCurrency === V2_CURRENCY_USD && (
         <div style={{ fontSize: '.7rem' }}>
           <Trans>
-            Paid as <CurrencySymbol currency="ETH" />
+            Paid aas <CurrencySymbol currency="ETH" />
           </Trans>
           {formatWad(weiPayAmt) || '0'}
         </div>
