@@ -34,7 +34,8 @@ function usePageViews() {
   const location = useLocation()
 
   useEffect(() => {
-    window.fathom?.trackPageview({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(window as any).fathom?.trackPageview({
       url: location.pathname,
     })
   }, [location])
